@@ -125,11 +125,9 @@ router.post(
 				}
 			}
 
-			// Filtering out the keyword from the list of synonyms.
-			let synonymsToReturn = sStorage[sLookup[word]].filter(
-				(syn) => syn !== word
-			)
-			return res.status(201).json({ word, synonyms: synonymsToReturn })
+			return res
+				.status(201)
+				.json({ message: 'Synonyms added successfully!' })
 		} catch (error) {
 			console.error(error)
 			return res.status(500).json({ message: 'Internal server error!' })
