@@ -9,7 +9,11 @@ const PORT = process.env.PORT || 8080
 // Setting the bodyParser to parse request body into JSON format
 app.use(express.json())
 // Enabling all CORS requests
-app.use(cors())
+app.use(
+	cors({
+		origin: 'https://synonyms-frontend.herokuapp.com',
+	})
+)
 // Defining two global variables that are accessible in all express routes
 // These variables will be used to store synonyms in backend's memory
 app.locals.synonymsLookup = {}
