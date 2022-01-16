@@ -68,20 +68,17 @@ router.post(
 					}
 				})
 			} else {
-				// 'checkSynonymsReferences' is a boolean variable used to check whether synonyms references
-				// need to be checked after synonyms are inserted into the dictionary.
-				// Synonyms references need to be checked and fixed when synonyms lists are concatinated after
-				// some number of synonyms has already been inserted into the dictionary.
-				let checkSynonymsReferences = true
 				// Setting a reference for a new synonyms list that will be created in the storage.
 				sLookup[word] = req.app.locals.groupIncrement
 				// Creating new synonyms list in the storage.
 				sStorage[sLookup[word]] = [word]
+
+				let oldGroupIncrement = req.app.locals.groupIncrement
 				// Incrementing number of synonym groups (lists) beacause we just created a new synonyms list.
 				req.app.locals.groupIncrement += 1
 
 				// Iterating list of submitted synonyms and adding them to the synonyms list and dictionary.
-				synonyms.forEach((synonym, index) => {
+				synonyms.forEach((synonym) => {
 					// If user submitted 'word' in 'synonyms' list ignore it.
 					if (synonym === word) {
 						return
@@ -91,7 +88,9 @@ router.post(
 					if (sLookup[synonym] !== undefined) {
 						// Decrementing number of synonyms gorups (lists) because
 						// synonyms list created for this request will be merged with an already existing one.
-						req.app.locals.groupIncrement -= 1
+						if (req.app.locals.groupIncrement > oldGroupIncrement) {
+							req.app.locals.groupIncrement -= 1
+						}
 
 						if (sLookup[synonym] !== sLookup[word]) {
 							// Concatinate lists of synoynms of 'synonym' and 'word'
@@ -99,30 +98,20 @@ router.post(
 								sLookup[synonym]
 							].concat(sStorage[sLookup[word]])
 
-							// If current 'synonym' is the first synonym in the list of synonyms
-							// getting rid of previous storage unit (list of synonyms) and
-							// setting a boolean value to not check synonyms references additionaly.
-							if (index === 0) {
-								checkSynonymsReferences = false
-								sStorage[sLookup[word]] = undefined
-							}
-							sLookup[word] = sLookup[synonym]
+							// Checking and fixing references for all words in the dictionary that are in the
+							// new synonyms group.
+							sStorage[sLookup[synonym]].forEach((syn) => {
+								if (sLookup[syn] !== sLookup[synonym]) {
+									sStorage[sLookup[syn]] = undefined
+									sLookup[syn] = sLookup[synonym]
+								}
+							})
 						}
 					} else {
 						sStorage[sLookup[word]].push(synonym)
 						sLookup[synonym] = sLookup[word]
 					}
 				})
-
-				// Checking and fixing the refrences of synonyms in the dictionary if required
-				if (checkSynonymsReferences) {
-					synonyms.forEach((synonym) => {
-						if (sLookup[synonym] !== sLookup[word]) {
-							sStorage[sLookup[synonym]] = undefined
-							sLookup[synonym] = sLookup[word]
-						}
-					})
-				}
 			}
 
 			return res
