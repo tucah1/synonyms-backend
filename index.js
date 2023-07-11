@@ -29,3 +29,4 @@ app.use('/api/v1/synonyms', synonyms)
 app.listen(PORT, () => {
 	console.log('Server started on port ' + PORT.toString())
 })
+ // Hello
